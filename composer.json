@@ -8,5 +8,7 @@
             "email": "dennis@snijder.io"
         }
     ],
-    "require": {}
+    "require": {
+        "guzzlehttp/guzzle": "~6.0"
+    }
 }
