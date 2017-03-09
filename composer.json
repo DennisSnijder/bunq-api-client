@@ -1,0 +1,12 @@
+{
+    "name": "snijder/bunq-api-client",
+    "description": "Bunq API Client",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Dennis Snijder",
+            "email": "dennis@snijder.io"
+        }
+    ],
+    "require": {}
+}
