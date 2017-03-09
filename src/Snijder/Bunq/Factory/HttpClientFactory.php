@@ -1,5 +1,5 @@
 <?php
-namespace Snijder\Bunq;
+namespace Snijder\Bunq\Factory;
 
 use GuzzleHttp\Client;
 
@@ -25,5 +25,4 @@ class HttpClientFactory
 
         return $httpClient;
     }
-
 }
