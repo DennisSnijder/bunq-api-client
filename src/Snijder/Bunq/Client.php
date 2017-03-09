@@ -1,6 +1,7 @@
 <?php
 namespace Snijder\Bunq;
 
+use Ramsey\Uuid\Uuid;
 use Snijder\Bunq\Factory\HttpClientFactory;
 
 /**
@@ -49,18 +50,24 @@ class Client
 
     /**
      * registers towards the Bunq API.
+     *
+     * @param $publicKey
      */
-    public function install()
+    public function install($publicKey)
     {
-        $this->httpClient->post($this->getAPIVersionPrefix() . "/installation", [
+        $response = $this->httpClient->post($this->getAPIVersionPrefix() . "/installation", [
             'headers' => [
+                'Content-Type' => 'application/json',
                 'Cache-Control' => 'no-cache',
                 'User-Agent' => 'bunq-api-client:user',
-                'X-Bunq-Client-Request-Id' => $this->createUUID(),
+                'X-Bunq-Client-Request-Id' => Uuid::uuid1(),
                 'X-Bunq-Geolocation' => '0 0 0 0 NL',
                 'X-Bunq-Language' => 'en_US',
                 'X-Bunq-Region' => 'en_US'
-            ]
+            ],
+            'body' => \GuzzleHttp\json_encode([
+                'client_public_key' => $publicKey
+            ])
         ]);
     }
 
@@ -70,15 +77,6 @@ class Client
     private function getAPIVersionPrefix()
     {
         return "/v" . $this->config['api_version'];
-    }
-
-    private function createUUID()
-    {
-        $randomInput = openssl_random_pseudo_bytes(16);
-        $randomInput[6] = chr(ord($randomInput[6]) & 0x0f | 0x40);
-        $randomInput[8] = chr(ord($randomInput[8]) & 0x3f | 0x80);
-
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($randomInput), 4));
     }
 
     /**

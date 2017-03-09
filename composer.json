@@ -9,7 +9,8 @@
         }
     ],
     "require": {
-        "guzzlehttp/guzzle": "~6.0"
+        "guzzlehttp/guzzle": "~6.0",
+        "ramsey/uuid": "^3.5"
     },
     "autoload": {
         "psr-4": { "Snijder\\Bunq\\": "src/Snijder/Bunq/" }
