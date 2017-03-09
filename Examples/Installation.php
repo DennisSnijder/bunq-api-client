@@ -1,12 +1,16 @@
 <?php
 require_once __DIR__ . "/../vendor/autoload.php";
 
-$client = new \Snijder\Bunq\Client();
 
 $keyPair = createKeyPair();
 
-$client->install($keyPair->publicKey);
+var_dump(\Snijder\Bunq\Installation::install($keyPair->publicKey));
 
+/**
+ * Simple function to create a private and public key.
+ *
+ * @return stdClass
+ */
 function createKeyPair()
 {
     $config = [

@@ -49,29 +49,6 @@ class Client
     }
 
     /**
-     * registers towards the Bunq API.
-     *
-     * @param $publicKey
-     */
-    public function install($publicKey)
-    {
-        $response = $this->httpClient->post($this->getAPIVersionPrefix() . "/installation", [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-cache',
-                'User-Agent' => 'bunq-api-client:user',
-                'X-Bunq-Client-Request-Id' => Uuid::uuid1(),
-                'X-Bunq-Geolocation' => '0 0 0 0 NL',
-                'X-Bunq-Language' => 'en_US',
-                'X-Bunq-Region' => 'en_US'
-            ],
-            'body' => \GuzzleHttp\json_encode([
-                'client_public_key' => $publicKey
-            ])
-        ]);
-    }
-
-    /**
      * @return string
      */
     private function getAPIVersionPrefix()
