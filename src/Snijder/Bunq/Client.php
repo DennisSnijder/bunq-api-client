@@ -87,14 +87,6 @@ class Client
     /**
      * @return string
      */
-    private function getAPIVersionPrefix()
-    {
-        return "/v" . $this->config['api_version'];
-    }
-
-    /**
-     * @return string
-     */
     public function getApplicationDescription()
     {
         return $this->applicationDescription;

@@ -3,6 +3,7 @@ namespace Snijder\Bunq\Factory;
 
 use GuzzleHttp\Client;
 use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
+use Snijder\Bunq\Subscriber\SessionSubscriber;
 
 
 /**
@@ -25,7 +26,10 @@ class HttpClientFactory
         $httpClient = new Client([
             "base_url" => $url,
             "defaults" => [
-                "subscribers" => [new RequestSigningSubscriber($privateKey)]
+                "subscribers" => [
+                    new SessionSubscriber(),
+                    new RequestSigningSubscriber($privateKey)
+                ]
             ]
         ]);
 
