@@ -2,6 +2,8 @@
 namespace Snijder\Bunq\Factory;
 
 use GuzzleHttp\Client;
+use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
+
 
 /**
  * Class HttpClientFactory
@@ -15,13 +17,18 @@ class HttpClientFactory
      * Creates the HttpClient
      *
      * @param $url
+     * @param $privateKey
      * @return Client
      */
-    public static function create($url)
+    public static function create($url, $privateKey)
     {
         $httpClient = new Client([
-            'base_uri' => $url
+            "base_url" => $url,
+            "defaults" => [
+                "subscribers" => [new RequestSigningSubscriber($privateKey)]
+            ]
         ]);
+
 
         return $httpClient;
     }
