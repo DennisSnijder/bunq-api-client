@@ -1,7 +1,7 @@
 <?php
-namespace Snijder\Bunq\Service;
+namespace Snijder\Bunq\Resource;
 
-use Snijder\Bunq\Client;
+use Snijder\Bunq\BunqClient;
 
 /**
  * Class AbstractResource
@@ -12,7 +12,7 @@ use Snijder\Bunq\Client;
 abstract class AbstractResource
 {
     /**
-     * @var Client
+     * @var BunqClient
      */
     protected $client;
 
@@ -24,12 +24,12 @@ abstract class AbstractResource
     /**
      * AbstractResource constructor.
      *
-     * @param Client $client
+     * @param BunqClient $bunqClient
      */
-    public function __construct(Client $client)
+    public function __construct(BunqClient $bunqClient)
     {
-        $this->client = $client;
-        $this->httpClient = $client->getHttpClient();
+        $this->client = $bunqClient;
+        $this->httpClient = $bunqClient->getHttpClient();
     }
 
     /**
@@ -37,5 +37,5 @@ abstract class AbstractResource
      *
      * @return string
      */
-    public abstract function getResourceEndpoint();
+    abstract protected function getResourceEndpoint();
 }

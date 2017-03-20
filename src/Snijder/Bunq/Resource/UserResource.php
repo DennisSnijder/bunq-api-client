@@ -1,5 +1,5 @@
 <?php
-namespace Snijder\Bunq\Service;
+namespace Snijder\Bunq\Resource;
 
 /**
  * Class UserResource
@@ -17,13 +17,14 @@ class UserResource extends AbstractResource
      */
     public function getResourceEndpoint()
     {
-        return "/user";
+        return $this->client->getApiVersionPrefix() . "/user";
     }
 
 
-    public function getUsers()
+    public function getUser($id)
     {
-       // return $this->httpClient->get();
+        return $this->httpClient->get(
+            $this->getResourceEndpoint() . "/" . $id
+        );
     }
-
 }

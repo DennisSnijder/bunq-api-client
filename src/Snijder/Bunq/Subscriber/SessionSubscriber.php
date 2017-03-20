@@ -32,5 +32,4 @@ class SessionSubscriber implements SubscriberInterface
     public function checkSession(BeforeEvent $event)
     {
     }
-
 }

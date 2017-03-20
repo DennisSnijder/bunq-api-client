@@ -4,7 +4,7 @@ namespace Snijder\Bunq\Subscriber;
 use GuzzleHttp\Event\BeforeEvent;
 use GuzzleHttp\Event\RequestEvents;
 use GuzzleHttp\Event\SubscriberInterface;
-use Snijder\Bunq\Client;
+use Snijder\Bunq\BunqClient;
 
 /**
  * Class RequestSigningSubscriber
@@ -25,7 +25,7 @@ class RequestSigningSubscriber implements SubscriberInterface
      *
      * @param $privateKey
      */
-    public function  __construct($privateKey)
+    public function __construct($privateKey)
     {
         $this->privateKey = $privateKey;
     }
@@ -48,7 +48,7 @@ class RequestSigningSubscriber implements SubscriberInterface
     {
         $request = $event->getRequest();
 
-        $request->addHeader(Client::HEADER_REQUEST_CUSTOM_SIGNATURE, $this->getSignature(
+        $request->addHeader(BunqClient::HEADER_REQUEST_CUSTOM_SIGNATURE, $this->getSignature(
             $request->getMethod(),
             $request->getHeaders(),
             $request->getBody(),
@@ -56,6 +56,15 @@ class RequestSigningSubscriber implements SubscriberInterface
         ));
     }
 
+    /**
+     * Signs the request, thanks to the Bunq API Example for this code.
+     *
+     * @param $method
+     * @param $headers
+     * @param $body
+     * @param $endpoint
+     * @return string
+     */
     private function getSignature($method, $headers, $body, $endpoint)
     {
         // When signing the headers they need to be in alphabetical order.
@@ -68,15 +77,15 @@ class RequestSigningSubscriber implements SubscriberInterface
 
             // Not all headers should be signed.
             // The User-Agent and Cash-Control headers need to be signed.
-            if ($key === Client::HEADER_REQUEST_USER_AGENT || $key === Client::HEADER_REQUEST_CACHE_CONTROL) {
+            if ($key === BunqClient::HEADER_REQUEST_USER_AGENT || $key === BunqClient::HEADER_REQUEST_CACHE_CONTROL) {
                 // Example: Cache-Control: no-cache
                 $toSign .= PHP_EOL . $key . ": " . $value[0];
             }
 
             // All headers with the prefix 'X-Bunq-' need to be signed.
-            if (substr($key, Client::HEADER_BUNQ_PREFIX_START, Client::HEADER_BUNQ_PREFIX_LENGTH) ===
-                Client::HEADER_BUNQ_PREFIX) {
-                $toSign .= PHP_EOL . $key . Client::HEADER_SEPARATOR . $value[0];
+            if (substr($key, BunqClient::HEADER_BUNQ_PREFIX_START, BunqClient::HEADER_BUNQ_PREFIX_LENGTH) ===
+                BunqClient::HEADER_BUNQ_PREFIX) {
+                $toSign .= PHP_EOL . $key . BunqClient::HEADER_SEPARATOR . $value[0];
             }
         }
 
@@ -93,5 +102,4 @@ class RequestSigningSubscriber implements SubscriberInterface
         // Don't forget to base64 encode the signature.
         return base64_encode($signature);
     }
-
 }

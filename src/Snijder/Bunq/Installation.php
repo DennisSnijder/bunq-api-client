@@ -1,13 +1,12 @@
 <?php
 namespace Snijder\Bunq;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use Ramsey\Uuid\Uuid;
-use Snijder\Bunq\Factory\HttpClientFactory;
+use GuzzleHttp\Message\ResponseInterface;
+use Snijder\Bunq\BunqClient;
 
 /**
- * Class Installation, used for installing your public key towards the API.
+ * Class Installation, used for installing the API / registering keys and ip's towards the server
  *
  * @package Snijder\Bunq
  * @author Dennis Snijder <Dennis@Snijder.io>
@@ -15,79 +14,79 @@ use Snijder\Bunq\Factory\HttpClientFactory;
 class Installation
 {
     /**
-     * Registers your public key with the Bunq API
-     *
-     * @param $publicKey
-     * @param int $APIVersion
-     * @param string $APIUrl
-     * @return mixed
+     * @var BunqClient
      */
-    public static function install($publicKey, $APIVersion = 1, $APIUrl = "https://sandbox.public.api.bunq.com")
+    private $BunqClient;
+
+    /**
+     * Installation constructor.
+     * @param \Snijder\Bunq\BunqClient $BunqClient
+     */
+    public function __construct(BunqClient $BunqClient)
     {
-        $httpClient = new Client(["base_uri" => $APIUrl]);
-
-        $response = $httpClient->post( "/v" . $APIVersion . "/installation", [
-            'headers' => [
-                'Content-Type' => 'application/json',
-                'Cache-Control' => 'no-cache',
-                'User-Agent' => 'bunq-api-client:user',
-                'X-Bunq-Client-Request-Id' => Uuid::uuid1(),
-                'X-Bunq-Geolocation' => '0 0 0 0 NL',
-                'X-Bunq-Language' => 'en_US',
-                'X-Bunq-Region' => 'en_US'
-            ],
-            'body' => json_encode([
-                'client_public_key' => $publicKey
-            ])
-        ]);
-
-        return json_decode((string) $response->getBody());
+        $this->BunqClient = $BunqClient;
     }
 
     /**
-     * @param $description
-     * @param $APIKey
-     * @param $authToken
-     * @param $privateKey
-     * @param array $ips
-     * @param int $APIVersion
-     * @param string $APIUrl
+     * Registers your public key with the Bunq API.
+     *
      * @return mixed
      */
-    public static function registerDevice(
-        $description,
-        $APIKey,
-        $authToken,
-        $privateKey,
-        $ips = [],
-        $APIVersion = 1,
-        $APIUrl = "https://sandbox.public.api.bunq.com"
-    ) {
-        $httpClient = HttpClientFactory::create($APIUrl, $privateKey);
+    public function install()
+    {
+        return $this->BunqClient->getHttpClient()->post(
+            $this->BunqClient->getApiVersionPrefix() . "/installation",
+            [
+                'json' => [
+                    'client_public_key' => $this->BunqClient->getPublicKey()
+                ]
+            ]
+        );
+    }
 
-        try {
-            $response = $httpClient->post("/v" . $APIVersion . "/device-server", [
+    /**
+     * Registers a device with the Bunq API.
+     *
+     * @param string $description , Device description
+     * @param array $ips , white-listed IPs
+     * @param string $registrationToken , Registration token received from the /installation endpoint
+     * @return ResponseInterface
+     */
+    public function registerDevice($description, array $ips, $registrationToken)
+    {
+        return $this->BunqClient->getHttpClient()->post(
+            $this->BunqClient->getApiVersionPrefix() . "/device-server",
+            [
                 'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Cache-Control' => 'no-cache',
-                    'User-Agent' => 'bunq-api-client:user',
-                    'X-Bunq-Client-Request-Id' => Uuid::uuid1(),
-                    'X-Bunq-Geolocation' => '0 0 0 0 NL',
-                    'X-Bunq-Language' => 'en_US',
-                    'X-Bunq-Region' => 'en_US',
-                    'X-Bunq-Client-Authentication' => $authToken
+                    'X-Bunq-Client-Authentication' => $registrationToken
                 ],
                 'json' => [
                     'description' => $description,
-                    'secret' => $APIKey,
+                    'secret' => $this->BunqClient->getApiKey(),
                     'permitted_ips' => $ips
                 ]
-            ]);
-        } catch (ClientException $exception) {
-            return json_decode( (string) $exception->getResponse()->getBody());
-        }
-
-        return json_decode((string) $response->getBody());
+            ]
+        );
     }
 
+    /**
+     * Registers a session with the Bunq API.
+     *
+     * @param $registrationToken string, Registration token received from the /installation endpoint
+     * @return mixed
+     */
+    public function createSession($registrationToken)
+    {
+        return $this->BunqClient->getHttpClient()->post(
+            $this->BunqClient->getApiVersionPrefix() . "/session",
+            [
+                'headers' => [
+                    'X-Bunq-Client-Authentication' => $registrationToken
+                ],
+                'json' => [
+                    'secret' => $this->BunqClient->getApiKey()
+                ]
+            ]
+        );
+    }
 }

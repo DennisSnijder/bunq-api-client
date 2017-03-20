@@ -5,12 +5,12 @@ use Ramsey\Uuid\Uuid;
 use Snijder\Bunq\Factory\HttpClientFactory;
 
 /**
- * Class Client
+ * Class BunqClient
  *
  * @package Snijder\Bunq
  * @author Dennis Snijder <Dennis@Snijder.io>
  */
-class Client
+class BunqClient
 {
     /**
      * Request HTTP header constants.
@@ -71,7 +71,8 @@ class Client
             [
                 'api_key' => null,
                 'auth_token' => null,
-                'private_key' => '',
+                'private_key' => null,
+                'public_key' => null,
                 'api_version' => 1,
                 'api_url' => 'https://sandbox.public.api.bunq.com'
             ],
@@ -80,6 +81,7 @@ class Client
 
         $this->httpClient = HttpClientFactory::create(
             $this->config['api_url'],
+            $this->config['auth_token'],
             $this->config['private_key']
         );
     }
@@ -98,6 +100,47 @@ class Client
     public function setApplicationDescription($applicationDescription)
     {
         $this->applicationDescription = $applicationDescription;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApiKey()
+    {
+        return $this->config['api_key'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getAuthToken()
+    {
+        return $this->config['auth_token'];
+    }
+
+    /**
+     * @return integer
+     */
+    public function getApiVersion()
+    {
+        return $this->config['api_version'];
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getApiVersionPrefix()
+    {
+        return "/v" . $this->getApiVersion();
+    }
+
+    /**
+     * @return string
+     */
+    public function getPublicKey()
+    {
+        return $this->config['public_key'];
     }
 
     /**
