@@ -38,7 +38,6 @@ class HttpClientFactory
                     'X-Bunq-Client-Authentication' => $token
                 ],
                 "subscribers" => [
-                    new SessionSubscriber(),
                     new RequestSigningSubscriber($privateKey)
                 ]
             ]
