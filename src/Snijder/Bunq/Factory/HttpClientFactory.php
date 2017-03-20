@@ -4,7 +4,6 @@ namespace Snijder\Bunq\Factory;
 use GuzzleHttp\Client;
 use Ramsey\Uuid\Uuid;
 use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
-use Snijder\Bunq\Subscriber\SessionSubscriber;
 
 /**
  * Class HttpClientFactory

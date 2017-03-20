@@ -14,7 +14,7 @@ abstract class AbstractResource
     /**
      * @var BunqClient
      */
-    protected $client;
+    protected $BunqClient;
 
     /**
      * @var \GuzzleHttp\Client
@@ -22,14 +22,21 @@ abstract class AbstractResource
     protected $httpClient;
 
     /**
+     * @var int
+     */
+    protected $userIdentifier;
+
+    /**
      * AbstractResource constructor.
      *
-     * @param BunqClient $bunqClient
+     * @param BunqClient $BunqClient
+     * @param int $userIdentifier
      */
-    public function __construct(BunqClient $bunqClient)
+    public function __construct(BunqClient $BunqClient, $userIdentifier)
     {
-        $this->client = $bunqClient;
-        $this->httpClient = $bunqClient->getHttpClient();
+        $this->BunqClient = $BunqClient;
+        $this->httpClient = $BunqClient->getHttpClient();
+        $this->userIdentifier = $userIdentifier;
     }
 
     /**
@@ -38,4 +45,20 @@ abstract class AbstractResource
      * @return string
      */
     abstract protected function getResourceEndpoint();
+
+    /**
+     * @return int
+     */
+    public function getUserIdentifier()
+    {
+        return $this->userIdentifier;
+    }
+
+    /**
+     * @param int $userIdentifier
+     */
+    public function setUserIdentifier($userIdentifier)
+    {
+        $this->userIdentifier = $userIdentifier;
+    }
 }
