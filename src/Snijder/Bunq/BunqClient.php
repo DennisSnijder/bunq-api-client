@@ -1,8 +1,17 @@
 <?php
 namespace Snijder\Bunq;
 
-use Ramsey\Uuid\Uuid;
+use GuzzleHttp\Exception\ClientException;
+use Snijder\Bunq\Exception\BunqException;
+use Snijder\Bunq\Exception\TokenNotFoundException;
 use Snijder\Bunq\Factory\HttpClientFactory;
+use Snijder\Bunq\Model\KeyPair;
+use Snijder\Bunq\Model\Token\InstallationToken;
+use Snijder\Bunq\Model\Token\SessionToken;
+use Snijder\Bunq\Model\Token\TokenInterface;
+use Snijder\Bunq\Storage\InstallationTokenFileStorage;
+use Snijder\Bunq\Storage\SessionTokenFileStorage;
+use Snijder\Bunq\Storage\TokenStorageInterface;
 
 /**
  * Class BunqClient
@@ -44,16 +53,19 @@ class BunqClient
     const URL_SEPARATOR = '/';
 
     /**
-     * @var array
+     * @var KeyPair
      */
-    private $config;
+    private $keyPair;
 
     /**
-     * The application description, in the Bunq documentation this is called the "Device description"
-     *
-     * @var string
+     * @var TokenStorageInterface
      */
-    private $applicationDescription = "";
+    private $sessionTokenStorage;
+
+    /**
+     * @var TokenStorageInterface
+     */
+    private $installationTokenStorage;
 
     /**
      * @var \GuzzleHttp\Client
@@ -61,45 +73,151 @@ class BunqClient
     private $httpClient;
 
     /**
+     * @var InstallationClient
+     */
+    private $installationClient;
+
+    /**
+     * @var array
+     */
+    private $permittedIps = [];
+
+    /**
      * Client constructor.
      *
-     * @param array $config
+     * @param KeyPair $keyPair
      */
-    public function __construct(array $config = [])
+    public function __construct(KeyPair $keyPair)
     {
-        $this->config = array_merge(
-            [
-                'api_key' => null,
-                'auth_token' => null,
-                'private_key' => null,
-                'public_key' => null,
-                'api_version' => 1,
-                'api_url' => 'https://sandbox.public.api.bunq.com'
-            ],
-            $config
-        );
+        $this->keyPair = $keyPair;
+    }
 
-        $this->httpClient = HttpClientFactory::create(
-            $this->config['api_url'],
-            $this->config['auth_token'],
-            $this->config['private_key']
-        );
+
+    /**
+     * @return TokenStorageInterface
+     */
+    public function getSessionTokenStorage(): TokenStorageInterface
+    {
+        if (!$this->sessionTokenStorage instanceof TokenStorageInterface) {
+            $this->sessionTokenStorage = new SessionTokenFileStorage(
+                sys_get_temp_dir()
+            );
+        }
+
+        return $this->sessionTokenStorage;
     }
 
     /**
-     * @return string
+     * @return TokenStorageInterface
      */
-    public function getApplicationDescription()
+    public function getInstallationTokenStorage(): TokenStorageInterface
     {
-        return $this->applicationDescription;
+        if (!$this->installationTokenStorage instanceof TokenStorageInterface) {
+            $this->installationTokenStorage = new InstallationTokenFileStorage(
+                sys_get_temp_dir()
+            );
+        }
+
+        return $this->installationTokenStorage;
     }
 
     /**
-     * @param string $applicationDescription
+     * @return TokenInterface | SessionToken
      */
-    public function setApplicationDescription($applicationDescription)
+    public function getSessionToken(): TokenInterface
     {
-        $this->applicationDescription = $applicationDescription;
+        try {
+            return $this->getSessionTokenStorage()->load();
+        } catch (TokenNotFoundException $exception) {
+            return $this->obtainNewSessionToken();
+        }
+    }
+
+    /**
+     * @return TokenInterface | InstallationToken
+     */
+    public function getInstallationToken(): TokenInterface
+    {
+        try {
+            return $this->getInstallationTokenStorage()->load();
+        } catch (TokenNotFoundException $exception) {
+            $token = $this->obtainNewInstallationToken();
+
+            //registers the device
+            $this->getInstallationClient()->registerDevice(
+                $token,
+                $this->getPermittedIps()
+            );
+
+            return $token;
+        }
+    }
+
+    /**
+     * @return SessionToken
+     */
+    private function obtainNewSessionToken(): SessionToken
+    {
+        $installationClient = $this->getInstallationClient();
+        $this->getInstallationToken();
+
+        $installation = $installationClient->createSession(
+            $this->getInstallationToken()
+        );
+
+        $sessionToken = SessionToken::fromGuzzleResponse($installation);
+        $this->getSessionTokenStorage()->save($sessionToken);
+
+        return $sessionToken;
+    }
+
+    /**
+     * @return TokenInterface | InstallationToken
+     */
+    private function obtainNewInstallationToken(): TokenInterface
+    {
+        $installationClient = $this->getInstallationClient();
+        $installation = $installationClient->install();
+
+        $installationToken = InstallationToken::fromGuzzleResponse($installation);
+        $this->getInstallationTokenStorage()->save($installationToken);
+
+        return $installationToken;
+    }
+
+    /**
+     * @return InstallationClient
+     */
+    private function getInstallationClient(): InstallationClient
+    {
+        if ($this->installationClient == null) {
+            $this->installationClient = new InstallationClient(
+                $this,
+                HttpClientFactory::createInstallationClient($this->getApiUrl(), $this->keyPair)
+            );
+        }
+
+        return $this->installationClient;
+    }
+
+    /**
+     * Handles the API Calling.
+     *
+     * @param string $method
+     * @param string $url
+     * @param array $options
+     * @return array
+     * @throws BunqException
+     */
+    public function requestAPI($method, $url, $options = []): array
+    {
+        $request = $this->getHttpClient()->createRequest($method, $url, $options);
+
+        try {
+            return $this->getHttpClient()->send($request)->json();
+        } catch (ClientException $e) {
+            throw new BunqException($e);
+        }
     }
 
     /**
@@ -107,15 +225,15 @@ class BunqClient
      */
     public function getApiKey()
     {
-        return $this->config['api_key'];
+        return $this->keyPair->getApiKey();
     }
 
     /**
      * @return string
      */
-    public function getAuthToken()
+    public function getPublicKey()
     {
-        return $this->config['auth_token'];
+        return $this->keyPair->getPublicKey();
     }
 
     /**
@@ -123,9 +241,16 @@ class BunqClient
      */
     public function getApiVersion()
     {
-        return $this->config['api_version'];
+        return 1;
     }
 
+    /**
+     * @return string
+     */
+    public function getApiUrl()
+    {
+        return "https://sandbox.public.api.bunq.com";
+    }
 
     /**
      * @return string
@@ -136,18 +261,64 @@ class BunqClient
     }
 
     /**
-     * @return string
-     */
-    public function getPublicKey()
-    {
-        return $this->config['public_key'];
-    }
-
-    /**
      * @return \GuzzleHttp\Client
      */
     public function getHttpClient()
     {
+        if ($this->httpClient == null) {
+            $this->httpClient = HttpClientFactory::create(
+                $this->getApiUrl(),
+                $this->getSessionToken(),
+                $this->keyPair
+            );
+        }
+
         return $this->httpClient;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPermittedIps(): array
+    {
+        if (empty($this->permittedIps) && isset($_SERVER['SERVER_ADDR'])) {
+            return [
+                $_SERVER['SERVER_ADDR']
+            ];
+        }
+
+        return $this->permittedIps;
+    }
+
+    /**
+     * @param array $permittedIps
+     */
+    public function setPermittedIps(array $permittedIps)
+    {
+        $this->permittedIps = $permittedIps;
+    }
+
+    /**
+     * @param string $ip
+     */
+    public function addPermittedIp(string $ip)
+    {
+        $this->permittedIps[] = $ip;
+    }
+
+    /**
+     * @param TokenStorageInterface $sessionTokenStorage
+     */
+    public function setSessionTokenStorage(TokenStorageInterface $sessionTokenStorage)
+    {
+        $this->sessionTokenStorage = $sessionTokenStorage;
+    }
+
+    /**
+     * @param TokenStorageInterface $installationTokenStorage
+     */
+    public function setInstallationTokenStorage(TokenStorageInterface $installationTokenStorage)
+    {
+        $this->installationTokenStorage = $installationTokenStorage;
     }
 }

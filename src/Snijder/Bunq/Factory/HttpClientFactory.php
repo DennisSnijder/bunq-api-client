@@ -2,7 +2,8 @@
 namespace Snijder\Bunq\Factory;
 
 use GuzzleHttp\Client;
-use Ramsey\Uuid\Uuid;
+use Snijder\Bunq\Model\KeyPair;
+use Snijder\Bunq\Model\Token\SessionToken;
 use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
 
 /**
@@ -13,15 +14,15 @@ use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
  */
 class HttpClientFactory
 {
+
     /**
-     * Creates the HttpClient
+     * Returns the standard used headers.
      *
-     * @param $url
-     * @param $token
-     * @param $privateKey
+     * @param string $url
+     * @param KeyPair $keyPair
      * @return Client
      */
-    public static function create($url, $token, $privateKey)
+    private static function createBaseClient(string $url, KeyPair $keyPair)
     {
         $httpClient = new Client([
             "base_url" => $url,
@@ -30,18 +31,49 @@ class HttpClientFactory
                     'Content-Type' => 'application/json',
                     'Cache-Control' => 'no-cache',
                     'User-Agent' => 'bunq-api-client:user',
-                    'X-Bunq-Client-Request-Id' => (string) Uuid::uuid4() . time(),
                     'X-Bunq-Geolocation' => '0 0 0 0 NL',
                     'X-Bunq-Language' => 'en_US',
-                    'X-Bunq-Region' => 'en_US',
-                    'X-Bunq-Client-Authentication' => $token
+                    'X-Bunq-Region' => 'en_US'
                 ],
                 "subscribers" => [
-                    new RequestSigningSubscriber($privateKey)
+                    new RequestSigningSubscriber($keyPair->getPrivateKey())
                 ]
             ]
         ]);
 
+        return $httpClient;
+    }
+
+    /**
+     * Creates an installation client.
+     *
+     * @param string $url
+     * @param KeyPair $keyPair
+     * @return Client
+     */
+    public static function createInstallationClient(string $url, KeyPair $keyPair)
+    {
+        return self::createBaseClient($url, $keyPair);
+    }
+
+    /**
+     * Creates the HttpClient
+     *
+     * @param string $url
+     * @param SessionToken $token
+     * @param KeyPair $keyPair
+     * @return Client
+     */
+    public static function create(string $url, SessionToken $token, KeyPair $keyPair)
+    {
+        $httpClient = self::createBaseClient($url, $keyPair);
+
+        $httpClient->setDefaultOption("headers", array_merge(
+            $httpClient->getDefaultOption("headers"),
+            [
+                "X-Bunq-Client-Authentication" => $token
+            ]
+        ));
 
         return $httpClient;
     }

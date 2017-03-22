@@ -4,6 +4,7 @@ namespace Snijder\Bunq\Subscriber;
 use GuzzleHttp\Event\BeforeEvent;
 use GuzzleHttp\Event\RequestEvents;
 use GuzzleHttp\Event\SubscriberInterface;
+use Ramsey\Uuid\Uuid;
 use Snijder\Bunq\BunqClient;
 
 /**
@@ -40,13 +41,14 @@ class RequestSigningSubscriber implements SubscriberInterface
         ];
     }
 
-
     /**
      * @param BeforeEvent $event
      */
     public function signRequest(BeforeEvent $event)
     {
         $request = $event->getRequest();
+
+        $request->addHeader("X-Bunq-Client-Request-Id", Uuid::uuid4());
 
         $request->addHeader(BunqClient::HEADER_REQUEST_CUSTOM_SIGNATURE, $this->getSignature(
             $request->getMethod(),

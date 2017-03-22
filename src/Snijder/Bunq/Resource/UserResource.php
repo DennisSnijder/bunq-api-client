@@ -1,8 +1,6 @@
 <?php
 namespace Snijder\Bunq\Resource;
 
-use GuzzleHttp\Message\ResponseInterface;
-
 /**
  * Class UserResource
  *
@@ -13,22 +11,43 @@ class UserResource extends AbstractResource
 {
 
     /**
-     * Returns the endpoint for the resource.
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getResourceEndpoint()
     {
         return $this->BunqClient->getApiVersionPrefix() . "/user";
     }
 
+
     /**
-     * @return ResponseInterface
+     * Lists all users within the current session.
+     *
+     * @return array
      */
-    public function getUser()
+    public function listUsers()
     {
-        return $this->httpClient->get(
-            $this->getResourceEndpoint() . "/" . $this->getUserIdentifier()
+        return $this->BunqClient->requestAPI(
+            "GET",
+            $this->getResourceEndpoint()
+        );
+    }
+
+
+    /**
+     * Gets a user its information.
+     *
+     * @param null $id, if null it will use the abstract user identifier.
+     * @return array
+     */
+    public function getUser($id = null)
+    {
+        if ($id == null) {
+            $id = $this->getUserIdentifier();
+        }
+
+        return $this->BunqClient->requestAPI(
+            "GET",
+            $this->getResourceEndpoint() . "/" . $id
         );
     }
 }

@@ -1,8 +1,6 @@
 <?php
 namespace Snijder\Bunq\Resource;
 
-use GuzzleHttp\Message\ResponseInterface;
-
 /**
  * Class MonetaryAccountResource
  *
@@ -12,9 +10,7 @@ use GuzzleHttp\Message\ResponseInterface;
 class MonetaryAccountResource extends AbstractResource
 {
     /**
-     * Returns the endpoint for the resource.
-     *
-     * @return string
+     * {@inheritdoc}
      */
     protected function getResourceEndpoint()
     {
@@ -22,12 +18,29 @@ class MonetaryAccountResource extends AbstractResource
     }
 
     /**
-     * @return ResponseInterface
+     * Lists all the Monetary accounts for the current user.
+     *
+     * @return array
      */
     public function listMonetaryAccounts()
     {
-        return $this->httpClient->get(
+        return $this->BunqClient->requestAPI(
+            "GET",
             $this->getResourceEndpoint()
+        );
+    }
+
+    /**
+     * Gets a Monetary Account by its identifier.
+     *
+     * @param $id
+     * @return array
+     */
+    public function getMonetaryAccount($id)
+    {
+        return $this->BunqClient->requestAPI(
+            "GET",
+            $this->getResourceEndpoint() . "/" . $id
         );
     }
 }

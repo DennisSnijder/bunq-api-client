@@ -17,11 +17,6 @@ abstract class AbstractResource
     protected $BunqClient;
 
     /**
-     * @var \GuzzleHttp\Client
-     */
-    protected $httpClient;
-
-    /**
      * @var int
      */
     protected $userIdentifier;
@@ -32,10 +27,9 @@ abstract class AbstractResource
      * @param BunqClient $BunqClient
      * @param int $userIdentifier
      */
-    public function __construct(BunqClient $BunqClient, $userIdentifier)
+    public function __construct(BunqClient $BunqClient, $userIdentifier = 0)
     {
         $this->BunqClient = $BunqClient;
-        $this->httpClient = $BunqClient->getHttpClient();
         $this->userIdentifier = $userIdentifier;
     }
 
