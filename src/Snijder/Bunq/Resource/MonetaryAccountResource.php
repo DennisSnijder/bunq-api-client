@@ -1,20 +1,36 @@
 <?php
 namespace Snijder\Bunq\Resource;
 
+use Snijder\Bunq\BunqClient;
+
 /**
  * Class MonetaryAccountResource
  *
  * @package Snijder\Bunq\Resource
  * @author Dennis Snijder <Dennis@Snijder.io>
  */
-class MonetaryAccountResource extends AbstractResource
+class MonetaryAccountResource implements ResourceInterface
 {
     /**
-     * {@inheritdoc}
+     * @var BunqClient
      */
-    protected function getResourceEndpoint()
+    private $BunqClient;
+
+    /**
+     * @var int
+     */
+    private $userIdentifier;
+
+    /**
+     * MonetaryAccountResource constructor.
+     *
+     * @param BunqClient $BunqClient
+     * @param int $userIdentifier
+     */
+    public function __construct(BunqClient $BunqClient, int $userIdentifier)
     {
-        return $this->BunqClient->getApiVersionPrefix() . "/user/" . $this->userIdentifier . "/monetary-account";
+        $this->BunqClient = $BunqClient;
+        $this->userIdentifier = $userIdentifier;
     }
 
     /**
@@ -42,5 +58,13 @@ class MonetaryAccountResource extends AbstractResource
             "GET",
             $this->getResourceEndpoint() . "/" . $id
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function getResourceEndpoint(): string
+    {
+        return $this->BunqClient->getApiVersionPrefix() . "/user/" . $this->userIdentifier . "/monetary-account";
     }
 }

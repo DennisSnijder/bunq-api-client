@@ -1,21 +1,37 @@
 <?php
 namespace Snijder\Bunq\Resource;
 
+use Snijder\Bunq\BunqClient;
+
 /**
  * Class UserResource
  *
  * @package Snijder\Bunq\Service
  * @author Dennis Snijder <Dennis@Snijder.io>
  */
-class UserResource extends AbstractResource
+class UserResource implements ResourceInterface
 {
 
     /**
-     * {@inheritdoc}
+     * @var BunqClient
      */
-    public function getResourceEndpoint()
+    private $BunqClient;
+
+    /**
+     * @var int
+     */
+    private $userIdentifier;
+
+    /**
+     * UserResource constructor.
+     *
+     * @param BunqClient $BunqClient
+     * @param int $userIdentifier
+     */
+    public function __construct(BunqClient $BunqClient, int $userIdentifier)
     {
-        return $this->BunqClient->getApiVersionPrefix() . "/user";
+        $this->BunqClient = $BunqClient;
+        $this->userIdentifier = $userIdentifier;
     }
 
 
@@ -42,12 +58,20 @@ class UserResource extends AbstractResource
     public function getUser($id = null)
     {
         if ($id == null) {
-            $id = $this->getUserIdentifier();
+            $id = $this->userIdentifier;
         }
 
         return $this->BunqClient->requestAPI(
             "GET",
             $this->getResourceEndpoint() . "/" . $id
         );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getResourceEndpoint(): string
+    {
+        return $this->BunqClient->getApiVersionPrefix() . "/user";
     }
 }
