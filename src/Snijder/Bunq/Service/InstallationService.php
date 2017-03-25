@@ -1,40 +1,50 @@
 <?php
-namespace Snijder\Bunq;
+namespace Snijder\Bunq\Service;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Message\RequestInterface;
 use GuzzleHttp\Message\ResponseInterface;
 use Snijder\Bunq\Exception\BunqException;
+use Snijder\Bunq\Model\KeyPair;
 use Snijder\Bunq\Model\Token\InstallationToken;
 
 /**
- * Class InstallationClient, used for installing the API / registering keys and ip's towards the server
+ * Class InstallationService, used for installing the API / registering keys and ip's towards the server
  *
  * @package Snijder\Bunq
  * @author Dennis Snijder <Dennis@Snijder.io>
  */
-class InstallationClient
+class InstallationService
 {
     /**
      * @var Client
      */
-    private $installationClient;
+    private $installationHttpClient;
+    /**
+     * @var KeyPair
+     */
+    private $keyPair;
 
     /**
-     * @var BunqClient
+     * @var array
      */
-    private $BunqClient;
+    private $permittedIps;
 
     /**
-     * Installation constructor.
-     * @param BunqClient $BunqClient
-     * @param Client $installationClient
+     * InstallationService constructor.
+     *
+     * @param Client $installationHttpClient
+     * @param KeyPair $keyPair
+     * @param array $permittedIps
      */
-    public function __construct(BunqClient $BunqClient, Client $installationClient)
-    {
-        $this->installationClient = $installationClient;
-        $this->BunqClient = $BunqClient;
+    public function __construct(
+        Client $installationHttpClient,
+        KeyPair $keyPair,
+        array $permittedIps
+    ) {
+        $this->installationHttpClient = $installationHttpClient;
+        $this->keyPair = $keyPair;
+        $this->permittedIps = $permittedIps;
     }
 
     /**
@@ -45,10 +55,10 @@ class InstallationClient
     public function install()
     {
         $request = $this->sendInstallationPostRequest(
-            $this->BunqClient->getApiVersionPrefix() . "/installation",
+            "/v1/installation",
             [
                 'json' => [
-                    'client_public_key' => $this->BunqClient->getPublicKey()
+                    'client_public_key' => $this->keyPair->getPublicKey()
                 ]
             ]
         );
@@ -60,21 +70,20 @@ class InstallationClient
      * Registers a device with the Bunq API.
      *
      * @param InstallationToken $token
-     * @param array $ips , white-listed IPs
      * @return ResponseInterface
      */
-    public function registerDevice(InstallationToken $token, array $ips)
+    public function registerDevice(InstallationToken $token)
     {
         $request = $this->sendInstallationPostRequest(
-            $this->BunqClient->getApiVersionPrefix() . "/device-server",
+            "/v1/device-server",
             [
                 'headers' => [
                     'X-Bunq-Client-Authentication' => (string)$token
                 ],
                 'json' => [
                     'description' => "Bunq PHP API Client",
-                    'secret' => $this->BunqClient->getApiKey(),
-                    'permitted_ips' => $ips
+                    'secret' => $this->keyPair->getApiKey(),
+                    'permitted_ips' => $this->permittedIps
                 ]
             ]
         );
@@ -91,13 +100,13 @@ class InstallationClient
     public function createSession(InstallationToken $token)
     {
         $request = $this->sendInstallationPostRequest(
-            $this->BunqClient->getApiVersionPrefix() . "/session-server",
+             "/v1/session-server",
             [
                 'headers' => [
                     'X-Bunq-Client-Authentication' => (string) $token
                 ],
                 'json' => [
-                    'secret' => $this->BunqClient->getApiKey()
+                    'secret' => $this->keyPair->getApiKey()
                 ]
             ]
         );
@@ -105,11 +114,18 @@ class InstallationClient
         return $request;
     }
 
-
+    /**
+     * Sends a post request using the installation HTTP Client
+     *
+     * @param $url
+     * @param array $options
+     * @return ResponseInterface
+     * @throws BunqException
+     */
     private function sendInstallationPostRequest($url, array $options = [])
     {
         try {
-            return $this->installationClient->post($url, $options);
+            return $this->installationHttpClient->post($url, $options);
         } catch (ClientException $exception) {
             throw new BunqException($exception);
         }

@@ -5,6 +5,7 @@ use GuzzleHttp\Client;
 use Snijder\Bunq\Model\KeyPair;
 use Snijder\Bunq\Model\Token\SessionToken;
 use Snijder\Bunq\Subscriber\RequestSigningSubscriber;
+use Snijder\Bunq\Subscriber\RequestUUIDSubscriber;
 
 /**
  * Class HttpClientFactory
@@ -36,7 +37,8 @@ class HttpClientFactory
                     'X-Bunq-Region' => 'en_US'
                 ],
                 "subscribers" => [
-                    new RequestSigningSubscriber($keyPair->getPrivateKey())
+                    new RequestUUIDSubscriber(),
+                    new RequestSigningSubscriber($keyPair->getPrivateKey()),
                 ]
             ]
         ]);

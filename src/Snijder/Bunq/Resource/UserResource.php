@@ -28,12 +28,11 @@ class UserResource implements ResourceInterface
      * @param BunqClient $BunqClient
      * @param int $userIdentifier
      */
-    public function __construct(BunqClient $BunqClient, int $userIdentifier)
+    public function __construct(BunqClient $BunqClient, int $userIdentifier = 0)
     {
         $this->BunqClient = $BunqClient;
         $this->userIdentifier = $userIdentifier;
     }
-
 
     /**
      * Lists all users within the current session.
@@ -42,8 +41,7 @@ class UserResource implements ResourceInterface
      */
     public function listUsers()
     {
-        return $this->BunqClient->requestAPI(
-            "GET",
+        return $this->BunqClient->getHttpService()->get(
             $this->getResourceEndpoint()
         );
     }
@@ -61,8 +59,7 @@ class UserResource implements ResourceInterface
             $id = $this->userIdentifier;
         }
 
-        return $this->BunqClient->requestAPI(
-            "GET",
+        return $this->BunqClient->getHttpService()->get(
             $this->getResourceEndpoint() . "/" . $id
         );
     }
@@ -72,6 +69,6 @@ class UserResource implements ResourceInterface
      */
     public function getResourceEndpoint(): string
     {
-        return $this->BunqClient->getApiVersionPrefix() . "/user";
+        return "/v1/user";
     }
 }

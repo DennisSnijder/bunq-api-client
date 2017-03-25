@@ -40,8 +40,7 @@ class MonetaryAccountResource implements ResourceInterface
      */
     public function listMonetaryAccounts()
     {
-        return $this->BunqClient->requestAPI(
-            "GET",
+        return $this->BunqClient->getHttpService()->get(
             $this->getResourceEndpoint()
         );
     }
@@ -54,8 +53,7 @@ class MonetaryAccountResource implements ResourceInterface
      */
     public function getMonetaryAccount($id)
     {
-        return $this->BunqClient->requestAPI(
-            "GET",
+        return $this->BunqClient->getHttpService()->get(
             $this->getResourceEndpoint() . "/" . $id
         );
     }
@@ -63,8 +61,8 @@ class MonetaryAccountResource implements ResourceInterface
     /**
      * {@inheritdoc}
      */
-    protected function getResourceEndpoint(): string
+    public function getResourceEndpoint(): string
     {
-        return $this->BunqClient->getApiVersionPrefix() . "/user/" . $this->userIdentifier . "/monetary-account";
+        return "/v1/user/" . $this->userIdentifier . "/monetary-account";
     }
 }
