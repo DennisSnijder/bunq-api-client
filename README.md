@@ -32,3 +32,15 @@ You can use the ``TokenStorageInterface`` to overwrite the default file system s
 $bunqClient->setInstallationTokenStorage($myInstallationTokenStorage);
 $bunqClient->setSessionTokenStorage($mySessionTokenStorage);
 ```
+
+or use the default token file storage.
+
+```php
+$bunqClient->setSessionTokenStorage(
+    new \Snijder\Bunq\Storage\SessionTokenFileStorage($path)
+);
+
+$bunqClient->setInstallationTokenStorage(
+    new \Snijder\Bunq\Storage\InstallationTokenFileStorage($path)
+);
+```

@@ -75,11 +75,11 @@ class TokenService
      */
     private function obtainNewSessionToken(): SessionToken
     {
-        $installation = $this->installationService->createSession(
+        $sessionRequest = $this->installationService->createSession(
             $this->getInstallationToken()
         );
 
-        $sessionToken = SessionToken::fromGuzzleResponse($installation);
+        $sessionToken = SessionToken::fromResponseArray($sessionRequest->json());
         $this->sessionTokenStorage->save($sessionToken);
 
         return $sessionToken;
@@ -90,10 +90,9 @@ class TokenService
      */
     private function obtainNewInstallationToken(): TokenInterface
     {
-        $installationToken = InstallationToken::fromGuzzleResponse(
-            $this->installationService->install()
-        );
+        $installationRequest = $this->installationService->install();
 
+        $installationToken = InstallationToken::fromResponseArray($installationRequest->json());
         $this->installationTokenStorage->save($installationToken);
 
         return $installationToken;

@@ -18,13 +18,12 @@ class SessionToken implements TokenInterface, JsonSerializable
     private $token;
 
     /**
-     * @param ResponseInterface $response
+     * @param array $response
      * @return SessionToken
      */
-    public static function fromGuzzleResponse(ResponseInterface $response)
+    public static function fromResponseArray(array $response): self
     {
-        $JsonResponse = $response->json();
-        return new self($JsonResponse['Response'][1]['Token']['token']);
+        return new self($response['Response'][1]['Token']['token']);
     }
 
     /**

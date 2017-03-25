@@ -18,6 +18,11 @@ class BunqException extends Exception
     private $exception;
 
     /**
+     * @var array
+     */
+    private $responseArray;
+
+    /**
      * BunqException constructor.
      *
      * @param ClientException $exception
@@ -25,6 +30,7 @@ class BunqException extends Exception
     public function __construct(ClientException $exception)
     {
         $this->exception = $exception;
+        $this->responseArray = $this->exception->getResponse()->json();
 
         parent::__construct(
             "Path: " . $exception->getRequest()->getPath() .
@@ -33,9 +39,19 @@ class BunqException extends Exception
         );
     }
 
-
-    public function getClientException()
+    /**
+     * @return ClientException
+     */
+    public function getClientException(): ClientException
     {
         return $this->exception;
+    }
+
+    /**
+     * @return array
+     */
+    public function getResponseArray(): array
+    {
+        return $this->responseArray;
     }
 }
