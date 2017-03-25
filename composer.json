@@ -17,5 +17,10 @@
     },
     "autoload": {
         "psr-4": { "Snijder\\Bunq\\": "src/Snijder/Bunq/" }
+    },
+    "autoload-dev": {
+        "psr-0": {
+            "Snijder\\Bunq\\Tests": "tests/"
+        }
     }
 }
