@@ -1,6 +1,6 @@
 # Bunq API Client #
 
-![Build status](https://travis-ci.org/DennisSnijder/bunq-api-client.svg)
+[![Build status](https://api.travis-ci.org/DennisSnijder/bunq-api-client.svg?branch=master)](https://travis-ci.org/DennisSnijder/bunq-api-client)
 
 ## Description ##
 
