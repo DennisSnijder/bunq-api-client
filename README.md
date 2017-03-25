@@ -1,5 +1,7 @@
 # Bunq API Client #
 
+![Build status](https://travis-ci.org/DennisSnijder/bunq-api-client.svg)
+
 ## Description ##
 
 A PHP Client Library for accessing Bunq's API.
